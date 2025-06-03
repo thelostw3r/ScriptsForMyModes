@@ -1,0 +1,193 @@
+-- Github Sounds
+function GetGitSound(GithubSnd, SoundName)
+    local url = GithubSnd
+    if not isfile(SoundName..".mp3") then
+        writefile(SoundName..".mp3", game:HttpGet(url))
+    end
+    local sound = Instance.new("Sound")
+    sound.SoundId = (getcustomasset or getsynasset)(SoundName..".mp3")
+    return sound
+end
+
+-- Services
+local Players = game:GetService("Players")
+local ReSt = game:GetService("ReplicatedStorage")
+local RS = game:GetService("RunService")
+local TS = game:GetService("TweenService")
+local CG = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+
+-- Variables
+local Plr = Players.LocalPlayer
+local Char = Plr.Character or Plr.CharacterAdded:Wait()
+local Hum = Char:WaitForChild("Humanoid")
+
+local StaticRushSpeed = 60
+local WorldToViewportPoint = Camera.WorldToViewportPoint
+local EntityConnections = {}
+
+-- Placeholder for required modules
+local SelfModules = {
+    DefaultConfig = loadstring(game:HttpGet("https://raw.githubusercontent.com/DripCapybara/Test/refs/heads/main/Doors/Backup/DefaultConfig.lua"))(),
+    Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Functions.lua"))(),
+}
+local ModuleScripts = {
+    ModuleEvents = require(ReSt.ClientModules.Module_Events),
+    MainGame = require(Plr.PlayerGui.MainUI.Initiator.Main_Game),
+}
+
+-- Helper Functions
+function onCharacterAdded(char)
+    Char, Hum = char, char:WaitForChild("Humanoid")
+end
+
+function getPlayerRoot()
+    return Char:FindFirstChild("HumanoidRootPart") or Char:FindFirstChild("Head")
+end
+
+function dragEntity(entityModel, pos, speed)
+    local entityConnections = EntityConnections[entityModel]
+    if entityConnections.movementNode then
+        entityConnections.movementNode:Disconnect()
+    end
+
+    entityConnections.movementNode = RS.Stepped:Connect(function(_, step)
+        if entityModel.Parent and not entityModel:GetAttribute("NoAI") then
+            local rootPos = entityModel.PrimaryPart.Position
+            local diff = pos - rootPos
+
+            if diff.Magnitude > 0.1 then
+                entityModel:PivotTo(CFrame.new(rootPos + diff.Unit * math.min(step * speed, diff.Magnitude)))
+            else
+                entityConnections.movementNode:Disconnect()
+            end
+        end
+    end)
+
+    repeat task.wait(0.7) until not entityConnections.movementNode.Connected
+end
+
+function loadSound(soundData)
+    local sound = Instance.new("Sound")
+    local soundId = tostring(soundData[1])
+    local properties = soundData[2]
+
+    for i, v in next, properties do
+        if i ~= "SoundId" and i ~= "Parent" then
+            sound[i] = v
+        end
+    end
+
+    sound.SoundId = soundId:find("rbxasset://") and soundId or "rbxassetid://"..soundId:gsub("%D", "")
+    sound.Parent = workspace
+    return sound
+end
+
+-- Spawner
+local Spawner = {}
+
+Spawner.createEntity = function(config)
+    for i, v in next, SelfModules.DefaultConfig do
+        if config[i] == nil then
+            config[i] = v
+        end
+    end
+
+    config.Speed = StaticRushSpeed / 100 * config.Speed
+
+    local entityModel = LoadCustomInstance(config.Model)
+    if typeof(entityModel) == "Instance" and entityModel.ClassName == "Model" and entityModel.PrimaryPart then
+        entityModel.PrimaryPart.Anchored = true
+        entityModel.Name = config.CustomName or entityModel.Name
+        entityModel:SetAttribute("IsCustomEntity", true)
+        entityModel:SetAttribute("NoAI", false)
+
+        local entityTable = {
+            Model = entityModel,
+            Config = config,
+            Debug = {
+                OnEntitySpawned = function() end,
+                OnEntityDespawned = function() end,
+                OnEntityStartMoving = function() end,
+                OnEntityFinishedRebound = function() end,
+                OnEntityEnteredRoom = function() end,
+                OnLookAtEntity = function() end,
+                OnDeath = function() end
+            }
+        }
+        return entityTable
+    end
+end
+
+Spawner.runEntity = function(entityTable)
+    local nodes = {}
+
+    -- Collect Door positions instead of PathfindNodes
+    for _, room in ipairs(workspace.CurrentRooms:GetChildren()) do
+        local door = room:FindFirstChild("Door")
+        if door and door:IsA("Model") and door:FindFirstChild("Door") then
+            local doorPart = door:FindFirstChild("Door")
+            if doorPart and doorPart:IsA("BasePart") then
+                table.insert(nodes, doorPart)
+            end
+        end
+    end
+
+    table.sort(nodes, function(a, b)
+        return a.Position.Z < b.Position.Z
+    end)
+
+    local entityModel = entityTable.Model:Clone()
+    EntityConnections[entityModel] = {}
+    local entityConnections = EntityConnections[entityModel]
+
+    entityModel:PivotTo(nodes[1].CFrame * CFrame.new(0, 3.5 + entityTable.Config.HeightOffset, 0))
+    entityModel.Parent = workspace
+    task.spawn(entityTable.Debug.OnEntitySpawned)
+
+    local moveSound = GetGitSound("https://github.com/check78/worldcuuuup/blob/main/DoomBegin.mp3?raw=true", "ReboundMove")
+    moveSound.Parent = entityModel.PrimaryPart
+    moveSound.Looped = true
+    moveSound.Volume = 0.5
+    moveSound.RollOffMaxDistance = 2000
+    moveSound.RollOffMinDistance = 50
+    moveSound:Play()
+
+    if entityTable.Config.FlickerLights[1] then
+        ModuleScripts.ModuleEvents.flicker(workspace.CurrentRooms[ReSt.GameData.LatestRoom.Value], entityTable.Config.FlickerLights[2])
+    end
+
+    task.wait(entityTable.Config.DelayTime)
+    task.spawn(entityTable.Debug.OnEntityStartMoving)
+
+    local cycles = math.max(math.random(entityTable.Config.Cycles.Min, entityTable.Config.Cycles.Max), 1)
+    for cycle = 1, cycles do
+        for _, node in ipairs(nodes) do
+            dragEntity(entityModel, node.Position + Vector3.new(0, 3.5 + entityTable.Config.HeightOffset, 0), entityTable.Config.Speed)
+        end
+        if entityTable.Config.Cycles.Max > 1 then
+            for i = #nodes, 1, -1 do
+                dragEntity(entityModel, nodes[i].Position + Vector3.new(0, 3.5 + entityTable.Config.HeightOffset, 0), entityTable.Config.Speed)
+            end
+        end
+        task.spawn(entityTable.Debug.OnEntityFinishedRebound)
+        if cycle < cycles then
+            task.wait(entityTable.Config.Cycles.WaitTime)
+        end
+    end
+
+    -- Clean up
+    for _, conn in pairs(entityConnections) do
+        if typeof(conn) == "RBXScriptConnection" then
+            conn:Disconnect()
+        end
+    end
+
+    task.spawn(entityTable.Debug.OnEntityDespawned)
+    entityModel.PrimaryPart.Anchored = false
+    entityModel.PrimaryPart.CanCollide = false
+    wait(6)
+    entityModel:Destroy()
+end
+
+return Spawner
