@@ -312,7 +312,7 @@ Spawner.runEntity = function(entityTable)
                         -- Unmute entity
 
                         task.spawn(function()
-                            repeat task.wait() until (Plr.PlayerGui.MainUI:FindFirstChild("DeathPanel") or Plr.PlayerGui.MainUI:FindFirstChild("DeathPanelDead")).Visible
+                            repeat task.wait() until ((Plr.PlayerGui:FindFirstChild("MainUI") or Plr.PlayerGui):FindFirstChild("DeathPanel") or (Plr.PlayerGui:FindFirstChild("MainUI") or Plr.PlayerGui):FindFirstChild("DeathPanelDead")).Visible
 
                             warn("unmute entity:", entityModel)
 
