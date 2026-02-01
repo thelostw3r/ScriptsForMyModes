@@ -23,7 +23,7 @@ local SelfModules = {
     Functions = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Functions.lua"))(),
 }
 local ModuleScripts = {
-    ModuleEvents = require(ReSt.ModulesClient.Module_Events),
+    ModuleEvents = require((ReSt:FindFirstChild("ModulesClient") or ReSt:FindFirstChild("ClientModules")):FindFirstChild("Module_Events")),
     MainGame = require(Plr.PlayerGui.MainUI.Initiator.Main_Game),
 }
 
@@ -199,7 +199,7 @@ Spawner.runEntity = function(entityTable)
 
     -- Mute entity on spawn
 
-    if CG:FindFirstChild("JumpscareGui") or (Plr.PlayerGui.MainUI.Death.HelpfulDialogue.Visible and not Plr.PlayerGui.MainUI.DeathPanel.Visible) then
+    if CG:FindFirstChild("JumpscareGui") or (Plr.PlayerGui.MainUI.Death.HelpfulDialogue.Visible and not Plr.PlayerGui.MainUI:FindFirstChild("DeathPanel").Visible or not Plr.PlayerGui.MainUI("DeathPanelDead").Visible) then
         warn("on death screen, mute entity")
 
         for _, v in next, entityModel:GetDescendants() do
@@ -312,7 +312,7 @@ Spawner.runEntity = function(entityTable)
                         -- Unmute entity
 
                         task.spawn(function()
-                            repeat task.wait() until Plr.PlayerGui.MainUI.DeathPanel.Visible
+                            repeat task.wait() until (Plr.PlayerGui.MainUI:FindFirstChild("DeathPanel") or Plr.PlayerGui.MainUI:FindFirstChild("DeathPanelDead")).Visible
 
                             warn("unmute entity:", entityModel)
 
