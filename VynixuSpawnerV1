@@ -250,7 +250,7 @@ Spawner.runEntity = function(entityTable)
             -- Camera shaking
             
             local shakeConfig = entityTable.Config.CamShake
-            local shakeMag = (getPlayerRoot().Position - entityModel.PrimaryPart.Position).Magnitude
+            local shakeMag = (workspace.CurrentCamera.CFrame.Position - entityModel.PrimaryPart.Position).Magnitude
 
             if shakeConfig[1] and shakeMag <= shakeConfig[3] then
                 local shakeRep = {}
