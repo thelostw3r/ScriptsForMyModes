@@ -12,6 +12,9 @@ local Plr = Players.LocalPlayer
 local Char = Plr.Character or Plr.CharacterAdded:Wait()
 local Hum = Char:WaitForChild("Humanoid")
 local Camera = workspace.CurrentCamera
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+  Camera = workspace.CurrentCamera
+end)
 
 local StaticRushSpeed = 60
 
@@ -250,7 +253,7 @@ Spawner.runEntity = function(entityTable)
             -- Camera shaking
             
             local shakeConfig = entityTable.Config.CamShake
-            local shakeMag = (workspace.CurrentCamera.CFrame.Position - entityModel.PrimaryPart.Position).Magnitude
+            local shakeMag = (Camera.CFrame.Position - entityModel.PrimaryPart.Position).Magnitude
 
             if shakeConfig[1] and shakeMag <= shakeConfig[3] then
                 local shakeRep = {}
@@ -306,7 +309,11 @@ Spawner.runEntity = function(entityTable)
                         ReSt.GameStats["Player_".. Plr.Name].Total.DeathCause.Value = entityModel.Name
                         
                         if #entityTable.Config.CustomDialog > 0 then
-                            firesignal(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent, entityTable.Config.CustomDialog, "Blue")
+                          if getconnections then
+                             debug.setupvalue(getconnections(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent)[1].Function, 1, entityTable.Config.CustomDialog, "Blue")
+                          elseif firesignal then
+                             firesignal(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent, entityTable.Config.CustomDialog, "Blue")
+                          end
                         end
                         
                         -- Unmute entity
