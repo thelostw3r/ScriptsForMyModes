@@ -309,10 +309,12 @@ Spawner.runEntity = function(entityTable)
                         ReSt.GameStats["Player_".. Plr.Name].Total.DeathCause.Value = entityModel.Name
                         
                         if #entityTable.Config.CustomDialog > 0 then
-                          if getconnections then
-                             debug.setupvalue(getconnections(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent)[1].Function, 1, entityTable.Config.CustomDialog, "Blue")
-                          elseif firesignal then
-                             firesignal(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent, entityTable.Config.CustomDialog, "Blue")
+                          for i = 1,50 do wait()
+                            if getconnections then
+                               debug.setupvalue(getconnections(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent)[1].Function, 1, entityTable.Config.CustomDialog, "Blue")
+                            elseif firesignal then
+                               firesignal(((game:GetService("ReplicatedStorage"):FindFirstChild("RemotesFolder") or game:GetService("ReplicatedStorage"):FindFirstChild("EntityInfo")):FindFirstChild("DeathHint")).OnClientEvent, entityTable.Config.CustomDialog, "Blue")
+                            end
                           end
                         end
                         
