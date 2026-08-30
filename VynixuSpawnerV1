@@ -202,7 +202,7 @@ Spawner.runEntity = function(entityTable)
 
     -- Mute entity on spawn
 
-    if CG:FindFirstChild("JumpscareGui") or (Plr.PlayerGui:FindFirstChild("MainUI"):FindFirstChild("Death"):FindFirstChild("HelpfulDialogue").Visible and not (Plr.PlayerGui.MainUI:FindFirstChild("DeathPanel") or Plr.PlayerGui.MainUI:FindFirstChild("DeathPanelDead")).Visible) then
+    if CG:FindFirstChild("JumpscareGui") or ((Plr.PlayerGui:FindFirstChild("MainUI"):FindFirstChild("Death"):FindFirstChild("HelpfulDialogue") or Plr.PlayerGui:FindFirstChild("MainUI"):FindFirstChild("Death"):FindFirstChild("HelpfulDialog")).Visible and not (Plr.PlayerGui.MainUI:FindFirstChild("DeathPanel") or Plr.PlayerGui.MainUI:FindFirstChild("DeathPanelDead")).Visible) then
         warn("on death screen, mute entity")
 
         for _, v in next, entityModel:GetDescendants() do
